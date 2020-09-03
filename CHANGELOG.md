@@ -9,9 +9,15 @@ This changelog catalogs all notable changes made to the project. The format
 is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Releases are 
 versioned in accordance with [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2020-09-03
+
+### Changed:
+- Removed direct dependency on `httpx` in favor of `servo` dependency.
+
 ## [0.2.0] - 2020-08-30
 
-Updated servox target dependency to v0.6.0
+### Changed
+- Updated servox target dependency to v0.6.0
 
 ## [0.1.0] - 2020-08-23
 

@@ -152,7 +152,7 @@ description = "Chromium HSTS Preload list as a Python package and updated daily"
 name = "hstspreload"
 optional = false
 python-versions = ">=3.6"
-version = "2020.8.25"
+version = "2020.9.2"
 
 [[package]]
 category = "main"
@@ -577,7 +577,7 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "2c66efdb0d767dd73c11e95162c6147c590bb61b3a932c66f9f05869e9e3cead"
+content-hash = "a46e7bf3c0e28dc8bf4eaebf16433314a3bdf2c93ae7c1023d01b2b9efaf19a6"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -649,8 +649,8 @@ hpack = [
     {file = "hpack-3.0.0.tar.gz", hash = "sha256:8eec9c1f4bfae3408a3f30500261f7e6a65912dc138526ea054f9ad98892e9d2"},
 ]
 hstspreload = [
-    {file = "hstspreload-2020.8.25-py3-none-any.whl", hash = "sha256:c96401eca4669340b423abd711d2d5d03ddf0685461f95e9cfe500d5e9acf3d2"},
-    {file = "hstspreload-2020.8.25.tar.gz", hash = "sha256:3129613419c13ea62411ec7375d79840e28004cbb6a585909ddcbeee401bea14"},
+    {file = "hstspreload-2020.9.2-py3-none-any.whl", hash = "sha256:0ecd9557e863fb2f9c7a82617a69e961bc0d287fe9c0d906f613647a8b2f9e57"},
+    {file = "hstspreload-2020.9.2.tar.gz", hash = "sha256:aa0b230cb39a2b407310a7fe18b07539bb1b9bc8aa6f042b4473d6e00f381758"},
 ]
 httpcore = [
     {file = "httpcore-0.9.1-py3-none-any.whl", hash = "sha256:9850fe97a166a794d7e920590d5ec49a05488884c9fc8b5dba8561effab0c2a0"},
