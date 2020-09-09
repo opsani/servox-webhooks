@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "servo-webhooks"
-version = "0.2.1"
+version = "0.2.2"
 description = "A flexible webhooks connector for Opsani Servo assemblies"
 authors = ["Blake Watters <blake@opsani.com>"]
 license = "Apache-2.0"
@@ -10,7 +10,7 @@ repository = "https://github.com/opsani/servo-webhooks"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-servox = "^0.6.0"
+servox = "^0.7.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0.1"
