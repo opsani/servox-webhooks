@@ -21,9 +21,6 @@ class WebhookEventConnector(BaseConnector):
             Metric("throughput", Unit.REQUESTS_PER_MINUTE),
             Metric("error_rate", Unit.PERCENTAGE),
         ]
-    
-def test_version():
-    assert __version__ == '0.2.1'
 
 @respx.mock
 async def test_webhook() -> None:
