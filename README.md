@@ -4,7 +4,6 @@
 [![PyPI](https://img.shields.io/pypi/v/servo-webhooks.svg)](https://pypi.org/project/servo-webhooks/)
 [![release](https://img.shields.io/github/release/opsani/servo-webhooks.svg)](https://github.com/opsani/servo-webhooks/releases/latest)
 [![GitHub release date](https://img.shields.io/github/release-date/opsani/servo-webhooks.svg)](https://github.com/opsani/servo-webhooks/releases)
-[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=opsani/servo-webhooks)](https://dependabot.com)
 
 An Opsani [Servo](https://github.com/opsani/servox) connector that provides a flexible webhooks 
 emitter based on [servo events](https://github.com/opsani/servox/#understanding-events).
