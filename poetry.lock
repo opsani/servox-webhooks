@@ -36,6 +36,7 @@ version = "0.13.0"
 reference = "9aefec8dd301bf8c4a4e03a22fb4ec64c2b479cf"
 type = "git"
 url = "https://github.com/Martiusweb/asynctest.git"
+
 [[package]]
 category = "dev"
 description = "Atomic file writes."
@@ -389,10 +390,9 @@ description = "A utility for mocking out the Python HTTPX and HTTP Core librarie
 name = "respx"
 optional = false
 python-versions = ">=3.6"
-version = "0.11.3"
+version = "0.12.1"
 
 [package.dependencies]
-asynctest = "*"
 httpx = ">=0.14,<0.15"
 
 [[package]]
@@ -542,7 +542,7 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "7b861b9a5012ff6f6bd89f40a1b4613d22a2b43d6acb2b9cb297211c51010ce1"
+content-hash = "cc676ec421f2eb307928441345ff7e85bc582a06dc920a24deb53e5ed633b252"
 lock-version = "1.0"
 python-versions = "^3.8"
 
@@ -728,8 +728,8 @@ pyyaml = [
     {file = "PyYAML-5.3.1.tar.gz", hash = "sha256:b8eac752c5e14d3eca0e6dd9199cd627518cb5ec06add0de9d32baeee6fe645d"},
 ]
 respx = [
-    {file = "respx-0.11.3-py2.py3-none-any.whl", hash = "sha256:5d21cec2b96b381de684917475201c5a5f39dfd0c8e5d2c8ff5181be71671f80"},
-    {file = "respx-0.11.3.tar.gz", hash = "sha256:eb0fd35263712c2f48b25ffada29862a4fb050140e9a86e75af7657a3d7beab0"},
+    {file = "respx-0.12.1-py2.py3-none-any.whl", hash = "sha256:2601acbb7b3bd26165f45714db1ec63a56670005fff774fe06b564dd7960464f"},
+    {file = "respx-0.12.1.tar.gz", hash = "sha256:7883b2c12ec803a6353ea4556f08b8d0a99ea864f4462a017029a68583892d1b"},
 ]
 rfc3986 = [
     {file = "rfc3986-1.4.0-py2.py3-none-any.whl", hash = "sha256:af9147e9aceda37c91a05f4deb128d4b4b49d6b199775fd2d2927768abdc8f50"},
