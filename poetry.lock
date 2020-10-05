@@ -36,6 +36,7 @@ version = "0.13.0"
 reference = "9aefec8dd301bf8c4a4e03a22fb4ec64c2b479cf"
 type = "git"
 url = "https://github.com/Martiusweb/asynctest.git"
+
 [[package]]
 category = "dev"
 description = "Atomic file writes."
@@ -239,6 +240,14 @@ python-versions = ">=3.5"
 version = "4.7.6"
 
 [[package]]
+category = "main"
+description = "Fast, correct Python JSON library supporting dataclasses, datetimes, and numpy"
+name = "orjson"
+optional = false
+python-versions = ">=3.6"
+version = "3.4.0"
+
+[[package]]
 category = "dev"
 description = "Core utilities for Python packages"
 name = "packaging"
@@ -425,7 +434,7 @@ description = "Opsani Servo: The Next Generation"
 name = "servox"
 optional = false
 python-versions = ">=3.8,<4.0"
-version = "0.7.0"
+version = "0.8.1"
 
 [package.dependencies]
 backoff = ">=1.10.0,<2.0.0"
@@ -435,6 +444,7 @@ httpx = ">=0.14.3,<0.15.0"
 jsonschema = ">=3.2.0,<4.0.0"
 kubernetes_asyncio = ">=11.3.0,<12.0.0"
 loguru = ">=0.5.1,<0.6.0"
+orjson = ">=3.3.1,<4.0.0"
 pyaml = ">=20.4.0,<21.0.0"
 pydantic = ">=1.5.1,<2.0.0"
 pygments = ">=2.6.1,<3.0.0"
@@ -652,6 +662,23 @@ multidict = [
     {file = "multidict-4.7.6-cp38-cp38-win_amd64.whl", hash = "sha256:7388d2ef3c55a8ba80da62ecfafa06a1c097c18032a501ffd4cabbc52d7f2b19"},
     {file = "multidict-4.7.6.tar.gz", hash = "sha256:fbb77a75e529021e7c4a8d4e823d88ef4d23674a202be4f5addffc72cbb91430"},
 ]
+orjson = [
+    {file = "orjson-3.4.0-cp36-cp36m-macosx_10_7_x86_64.whl", hash = "sha256:5b7db73d295d75a25c4f3a120e141d182cbcbb240d07c1b006655269bb802508"},
+    {file = "orjson-3.4.0-cp36-cp36m-manylinux2014_aarch64.whl", hash = "sha256:4fc25cd9f81de2b6e55fa7e5563973a1d47c05c86fbaf9124b1b74a08df65929"},
+    {file = "orjson-3.4.0-cp36-cp36m-manylinux2014_x86_64.whl", hash = "sha256:e7c2920f66ee994cef285e93b81bee08935803b4f322bee77d0353a33746f778"},
+    {file = "orjson-3.4.0-cp36-none-win_amd64.whl", hash = "sha256:24dd09562ec383ddd77e9f82b9d604ea3a300643b2fd5beaf9a0b21d77e52be2"},
+    {file = "orjson-3.4.0-cp37-cp37m-macosx_10_7_x86_64.whl", hash = "sha256:86c005a10b626e1be5392a439774cf79f920a6e90f49dcd708aa6adc0c2f3fb3"},
+    {file = "orjson-3.4.0-cp37-cp37m-manylinux2014_aarch64.whl", hash = "sha256:b326c47e19c939ee770c377d72d7595eefc21bf3b08864fcb82f46d433a0069f"},
+    {file = "orjson-3.4.0-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:fd1bf6ab3b12020531a153e77d8468d7febf0efa6e36a64a06e08e5c02d2d707"},
+    {file = "orjson-3.4.0-cp37-none-win_amd64.whl", hash = "sha256:132766446e6ff0ad9d13cd550cfc15d078ca3d2c6d5277517897da91d12e39df"},
+    {file = "orjson-3.4.0-cp38-cp38-macosx_10_7_x86_64.whl", hash = "sha256:48238a0a2696c4f082d5432802064b4a63849cce3fc81ea80d9517f5cfeda138"},
+    {file = "orjson-3.4.0-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:ec84a7c0703fab8b4feecac19a5fb92156ae402fc8952a961ecbf1cdac1ef5c0"},
+    {file = "orjson-3.4.0-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:5ed087b0de8c8fad29d0b776d5c3287644271159e85efe2fbd745ebc0cb81697"},
+    {file = "orjson-3.4.0-cp38-none-win_amd64.whl", hash = "sha256:af526fa8f4e4ac6ba953bf50bb384928a7d4a2849180c21593cdd3e08060f8ca"},
+    {file = "orjson-3.4.0-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:4a757ee2154b09631d272e63bd35c549f876ce5425dd154446dff0e1ef603429"},
+    {file = "orjson-3.4.0-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:1e957d1ab0ea3e4a4706cfa8f00a3a672dda7959607c231b6acb0b15ce35d52e"},
+    {file = "orjson-3.4.0.tar.gz", hash = "sha256:2dcfc744cad7dceee7fca55ebdca91cc79e14223acc76423f0f4017e7a2676c9"},
+]
 packaging = [
     {file = "packaging-20.4-py2.py3-none-any.whl", hash = "sha256:998416ba6962ae7fbd6596850b80e17859a5753ba17c32284f67bfff33784181"},
     {file = "packaging-20.4.tar.gz", hash = "sha256:4357f74f47b9c12db93624a82154e9b120fa8293699949152b22065d556079f8"},
@@ -740,8 +767,8 @@ semver = [
     {file = "semver-2.10.2.tar.gz", hash = "sha256:c0a4a9d1e45557297a722ee9bac3de2ec2ea79016b6ffcaca609b0bc62cf4276"},
 ]
 servox = [
-    {file = "servox-0.7.0-py3-none-any.whl", hash = "sha256:9386f6c1e5539634be63328b2d2c5aba49dac721bdc0d7d334376fca8b25a78e"},
-    {file = "servox-0.7.0.tar.gz", hash = "sha256:b4de896bbe269c77c833bd0c53de4f3bf8083bc22bff65072522f706967f65dc"},
+    {file = "servox-0.8.1-py3-none-any.whl", hash = "sha256:9f8f1ef0a77bf43529507cdd2a409935e9a91f8d3fc911629f455121a69ceca0"},
+    {file = "servox-0.8.1.tar.gz", hash = "sha256:94436930c8ae7fd43979f2fca7efb2e812467efa29d00ad28b36cabd00c7c030"},
 ]
 six = [
     {file = "six-1.15.0-py2.py3-none-any.whl", hash = "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"},
