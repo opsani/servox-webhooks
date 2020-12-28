@@ -11,9 +11,9 @@ from pydantic import AnyHttpUrl, BaseModel, Field, SecretStr, validator
 import servo
 from servo import metadata, License, Maturity, Duration
 from servo.events import (
-    EventContext, 
-    EventResult, 
-    Preposition, 
+    EventContext,
+    EventResult,
+    Preposition,
     validate_event_contexts
 )
 
@@ -25,10 +25,10 @@ except PackageNotFoundError:
 
 
 SUCCESS_STATUS_CODES = (
-    httpx.codes.OK, 
-    httpx.codes.CREATED, 
-    httpx.codes.ACCEPTED, 
-    httpx.codes.NO_CONTENT, 
+    httpx.codes.OK,
+    httpx.codes.CREATED,
+    httpx.codes.ACCEPTED,
+    httpx.codes.NO_CONTENT,
     httpx.codes.ALREADY_REPORTED
 )
 CONTENT_TYPE = "application/vnd.opsani.servo-webhooks+json"
@@ -70,9 +70,9 @@ class Webhook(servo.BaseConfiguration):
         if isinstance(v, str):
             return [v]
         return v
-    
+
     # Map strings from config into EventContext objects
-    _validate_events = validator("events", pre=True, allow_reuse=True)(validate_event_contexts)    
+    _validate_events = validator("events", pre=True, allow_reuse=True)(validate_event_contexts)
 
 
 class WebhooksConfiguration(servo.AbstractBaseConfiguration):
@@ -92,7 +92,7 @@ class WebhooksConfiguration(servo.AbstractBaseConfiguration):
             ],
             **kwargs,
         )
-    
+
     @property
     def webhooks(self) -> List[Webhook]:
         """
@@ -119,8 +119,8 @@ class RequestBody(BaseModel):
     description="Dispatch servo events via HTTP webhooks",
     version=__version__,
     homepage="https://github.com/opsani/servo-webhooks",
-    license=License.APACHE2,
-    maturity=Maturity.EXPERIMENTAL,
+    license=License.apache2,
+    maturity=Maturity.experimental,
 )
 class WebhooksConnector(servo.BaseConnector):
     config: WebhooksConfiguration
@@ -128,7 +128,7 @@ class WebhooksConnector(servo.BaseConnector):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._register_event_handlers()
-    
+
     def _register_event_handlers(self) -> None:
         for webhook in self.config.webhooks:
             for event_name in webhook.events:
@@ -150,7 +150,7 @@ class WebhooksConnector(servo.BaseConnector):
                 success = (response.status_code == httpx.codes.OK)
 
         self.add_event_handler(event.event, event.preposition, __before_handler)
-        
+
     def _add_after_event_webhook_handler(self, webhook: Webhook, event: EventContext) -> None:
         async def __after_handler(self, results: List[EventResult], **kwargs) -> None:
             headers = {**webhook.headers, **{ "Content-Type": CONTENT_TYPE }}
@@ -168,13 +168,13 @@ class WebhooksConnector(servo.BaseConnector):
                 created_at=datetime.now(),
                 results=outbound_results
             )
-            
+
             json_body = body.json()
             headers["X-Servo-Signature"] = self._signature_for_webhook_body(webhook, json_body)
             async with httpx.AsyncClient(headers=headers) as client:
                 response = await client.post(webhook.url, data=json_body, headers=headers)
                 success = (response.status_code in SUCCESS_STATUS_CODES)
-                if success:                    
+                if success:
                     self.logger.success(f"posted webhook for '{event}' event to '{webhook.url}' ({response.status_code} {response.reason_phrase})")
                 else:
                     self.logger.error(f"failed posted webhook for '{event}' event to '{webhook.url}' ({response.status_code} {response.reason_phrase}): {response.text}")

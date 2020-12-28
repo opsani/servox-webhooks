@@ -1,11 +1,12 @@
 # servo-webhooks
+
 ![Run Tests](https://github.com/opsani/servo-webhooks/workflows/Run%20Tests/badge.svg)
 [![license](https://img.shields.io/github/license/opsani/servo-webhooks.svg)](https://github.com/opsani/servo-webhooks/blob/master/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/servo-webhooks.svg)](https://pypi.org/project/servo-webhooks/)
 [![release](https://img.shields.io/github/release/opsani/servo-webhooks.svg)](https://github.com/opsani/servo-webhooks/releases/latest)
 [![GitHub release date](https://img.shields.io/github/release-date/opsani/servo-webhooks.svg)](https://github.com/opsani/servo-webhooks/releases)
 
-An Opsani [Servo](https://github.com/opsani/servox) connector that provides a flexible webhooks 
+An Opsani [Servo](https://github.com/opsani/servox) connector that provides a flexible webhooks
 emitter based on [servo events](https://github.com/opsani/servox/#understanding-events).
 
 The webhooks connector extends the eventing infrastruture provided by the servo to enable events 
@@ -125,7 +126,7 @@ deep integration of [Pydantic](https://pydantic-docs.helpmanual.io/) in servox. 
 
 ## Testing
 
-Automated tests are implemented via [Pytest](https://docs.pytest.org/en/stable/): `pytest test_servo_webhooks.py`
+Automated tests are implemented via [Pytest](https://docs.pytest.org/en/stable/): `pytest .`
 
 ## License
 
