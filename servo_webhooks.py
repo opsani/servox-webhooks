@@ -10,6 +10,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, SecretStr, validator
 
 import servo
 from servo import metadata, License, Maturity, Duration
+from servo.cli import ConnectorCLI
 from servo.events import (
     EventContext,
     EventResult,
@@ -135,9 +136,9 @@ class WebhooksConnector(servo.BaseConnector):
                 event = EventContext.from_str(event_name)
                 if not event:
                     raise ValueError(f"invalid webhook event '{event_name}'")
-                if event.preposition == Preposition.BEFORE:
+                if event.preposition == Preposition.before:
                     self._add_before_event_webhook_handler(webhook, event)
-                elif event.preposition == Preposition.AFTER:
+                elif event.preposition == Preposition.after:
                     self._add_after_event_webhook_handler(webhook, event)
                 else:
                     raise ValueError(f"Unsupported Preposition value given for webhook: '{event.preposition}'")
@@ -185,6 +186,6 @@ class WebhooksConnector(servo.BaseConnector):
         secret_bytes = webhook.secret.get_secret_value().encode()
         return str(hmac.new(secret_bytes, body.encode(), hashlib.sha1).hexdigest())
 
-class CLI(servo.cli.ConnectorCLI):
+class CLI(ConnectorCLI):
     pass
     # add, remove, test

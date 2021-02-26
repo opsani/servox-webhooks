@@ -10,13 +10,13 @@ repository = "https://github.com/opsani/servo-webhooks"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-servox = ">= 0.7.0"
+servox = ">= 0.9.5"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.0.1"
+pytest = "^6.1.1"
 pytest-asyncio = "^0.14.0"
 asynctest = {git = "https://github.com/Martiusweb/asynctest.git", rev = "py3.8"}
-respx = "^0.11.2"
+respx = "^0.16.3"
 
 [tool.poetry.plugins."servo.connectors"]
 "servo-webhooks" = "servo_webhooks:WebhooksConnector"

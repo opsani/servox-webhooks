@@ -18,8 +18,8 @@ class WebhookEventConnector(BaseConnector):
     @on_event()
     def metrics(self) -> List[Metric]:
         return [
-            Metric("throughput", Unit.REQUESTS_PER_MINUTE),
-            Metric("error_rate", Unit.PERCENTAGE),
+            Metric("throughput", Unit.requests_per_minute),
+            Metric("error_rate", Unit.percentage),
         ]
 
 @respx.mock
@@ -28,7 +28,7 @@ async def test_webhook() -> None:
     config = WebhooksConfiguration(__root__=[webhook])
     connector = WebhooksConnector(config=config)
 
-    request = respx.post("http://localhost:8080/webhook", status_code=200)
+    request = respx.post("http://localhost:8080/webhook").respond(status_code=200)
     await connector.dispatch_event("measure")
     assert request.called
 
@@ -38,7 +38,7 @@ async def test_webhooks() -> None:
     config = WebhooksConfiguration(__root__=[webhook])
     connector = WebhooksConnector(config=config)
 
-    request = respx.post("http://localhost:8080/webhook", status_code=200)
+    request = respx.post("http://localhost:8080/webhook").respond(status_code=200)
     await connector.dispatch_event("measure")
     assert request.called
 
@@ -56,7 +56,7 @@ async def test_after_metrics_webhook() -> None:
     config = WebhooksConfiguration(__root__=[webhook])
     connector = WebhooksConnector(config=config)
 
-    request = respx.post("http://localhost:8080/webhook", status_code=200)
+    request = respx.post("http://localhost:8080/webhook").respond(status_code=200)
     provider = WebhookEventConnector(config=BaseConfiguration())
     provider.__connectors__.append(connector)
     results = await provider.dispatch_event("metrics")
@@ -92,7 +92,7 @@ async def test_hmac_signature() -> None:
     connector = WebhooksConnector(config=config)
 
     info = {}
-    def match_and_mock(request, response):
+    def match_and_mock(request):
         if request.method != "POST":
             return None
 
@@ -101,9 +101,9 @@ async def test_hmac_signature() -> None:
             body = request.read()
             info.update(dict(signature=signature, body=body))
 
-        return response
+        return httpx.Response(status_code=204)
 
-    webhook_request = respx.add(match_and_mock, status_code=204)
+    webhook_request = respx.route().mock(side_effect=match_and_mock)
     await connector.dispatch_event("measure")
     assert webhook_request.called
 
