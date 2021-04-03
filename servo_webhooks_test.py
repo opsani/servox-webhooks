@@ -13,6 +13,7 @@ from servo_webhooks import WebhooksConfiguration, WebhooksConnector, Webhook, __
 import httpx
 import respx
 import fastapi
+import uvicorn
 
 pytestmark = pytest.mark.asyncio
 
@@ -29,6 +30,7 @@ async def test_webhook() -> None:
     webhook = Webhook(url="http://localhost:8080/webhook", events="before:measure", secret="testing")
     config = WebhooksConfiguration(__root__=[webhook])
     connector = WebhooksConnector(config=config)
+    await connector.startup()
 
     request = respx.post("http://localhost:8080/webhook").mock(return_value=httpx.Response(204))
     await connector.dispatch_event("measure")
@@ -39,6 +41,7 @@ async def test_webhooks() -> None:
     webhook = Webhook(url="http://localhost:8080/webhook", events=["before:measure", "after:adjust"], secret="test")
     config = WebhooksConfiguration(__root__=[webhook])
     connector = WebhooksConnector(config=config)
+    await connector.startup()
 
     request = respx.post("http://localhost:8080/webhook").mock(return_value=httpx.Response(204))
     await connector.dispatch_event("measure")
@@ -46,6 +49,13 @@ async def test_webhooks() -> None:
 
     await connector.dispatch_event("adjust")
     assert request.called
+
+async def test_unresponsive_webhook_doesnt_crash() -> None:
+    webhook = Webhook(url="http://localhost:8259/webhook", events=["before:measure", "after:adjust"], secret="test")
+    config = WebhooksConfiguration(__root__=[webhook])
+    connector = WebhooksConnector(config=config)
+    await connector.startup()
+    await connector.dispatch_event("adjust")
 
 def test_headers_are_added_to_requests() -> None:
     pass
@@ -57,6 +67,7 @@ async def test_after_metrics_webhook() -> None:
     webhook = Webhook(url="http://localhost:8080/webhook", events=["after:metrics"], secret="w00t")
     config = WebhooksConfiguration(__root__=[webhook])
     connector = WebhooksConnector(config=config)
+    await connector.startup()
 
     request = respx.post("http://localhost:8080/webhook").respond(204)
     provider = WebhookEventConnector(config=BaseConfiguration())
@@ -87,11 +98,16 @@ def test_event_body() -> None:
 def test_request_schema() -> None:
     pass
 
+def test_channels_and_events_cannot_be_empty() -> None:
+    with pytest.raises(pydantic.ValidationError, match='missing webhook data source: events and channels cannot both be empty'):
+        Webhook(url="http://localhost:8080/webhook", secret="testing")
+
 @respx.mock
 async def test_hmac_signature() -> None:
     webhook = Webhook(url="http://localhost:8080/webhook", events="after:measure", secret="testing")
     config = WebhooksConfiguration(__root__=[webhook])
     connector = WebhooksConnector(config=config)
+    await connector.startup()
 
     info = {}
     def match_and_mock(request):
@@ -156,18 +172,6 @@ def test_from_str(event_str: str, found: bool, resolved: str):
     ec = EventContext.from_str(event_str)
     assert bool(ec) == found
     assert (ec.__str__() if ec else None) == resolved
-
-##
-# CLI
-
-# def test_generate(
-#     cli_runner: CliRunner, servo_cli: Typer, optimizer_env: None, stub_servo_yaml: Path
-# ) -> None:
-#     result = cli_runner.invoke(servo_cli, "show metrics", catch_exceptions=False)
-#     assert result.exit_code == 0
-#     assert re.match("METRIC\\s+UNIT\\s+CONNECTORS", result.stdout)
-
-import uvicorn
 
 class FakeAPI(uvicorn.Server):
     """Testing server for implementing API fakes on top of Uvicorn and FastAPI.
@@ -306,7 +310,7 @@ async def test_channel_webhooks(
     await publisher.startup()
     await connector.startup()
 
-    await asyncio.sleep(3.0)
+    await asyncio.sleep(3.5)
 
     assert publisher.count
     assert notifications
@@ -339,7 +343,7 @@ async def test_channel_webhooks_with_response_channel(
     await response_observer.startup()
     await connector.startup()
 
-    await asyncio.sleep(3.0)
+    await asyncio.sleep(3.5)
 
     assert publisher.count
     assert notifications

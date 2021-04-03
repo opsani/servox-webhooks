@@ -1,11 +1,13 @@
 from __future__ import annotations
 import hmac
 import hashlib
-from datetime import datetime
+import datetime
 from importlib.metadata import PackageNotFoundError, version
 from typing import Any, Dict, List, Optional
 
 import httpx
+import pydantic
+import devtools
 from pydantic import AnyHttpUrl, BaseModel, Field, SecretStr, validator
 
 import servo
@@ -54,7 +56,7 @@ class Webhook(servo.BaseConfiguration):
         [],
         description="A list of events that the webhook is listening for.",
     )
-    channels: List[str] = Field(
+    channels: List[servo.pubsub.ChannelName] = Field(
         [],
         description="A list of channels that the webhook is subscribed to.",
     )
@@ -82,7 +84,16 @@ class Webhook(servo.BaseConfiguration):
     # Map strings from config into EventContext objects
     _validate_events = validator("events", pre=True, allow_reuse=True)(validate_event_contexts)
 
-    # TODO: must have events or channels
+    @pydantic.root_validator(skip_on_failure=True)
+    @classmethod
+    def _validate_has_events_or_channels(cls, values: dict) -> Dict[str, Any]:
+        events, channels = values["events"], values["channels"]
+        if len(events) == 0 and len(channels) == 0:
+            raise ValueError(
+                f"missing webhook data source: events and channels cannot both be empty"
+            )
+
+        return values
 
 
 class WebhooksConfiguration(servo.AbstractBaseConfiguration):
@@ -120,8 +131,8 @@ class Result(BaseModel):
 class RequestBody(BaseModel):
     """Models the JSON body of a webhook request containing event results"""
     event: str
-    created_at: datetime
-    results: List[Result]
+    created_at: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
+    results: Optional[List[Result]] = None
 
 
 @metadata(
@@ -137,35 +148,11 @@ class WebhooksConnector(servo.BaseConnector):
 
     @servo.on_event()
     async def startup(self) -> None:
-        for webhook in self.config.webhooks:
-            for channel in webhook.channels:
-                @self.subscribe(channel)
-                async def _message_received(message: servo.Message, channel: servo.Channel) -> None:
-                    servo.logger.debug(f"Notified of a new Message: {message}, {channel}")
-
-                    headers = {**webhook.headers, **{ "Content-Type": CONTENT_TYPE }}
-                    headers["X-Servo-Signature"] = self._signature_for_webhook_body(webhook, message.text)
-                    async with httpx.AsyncClient(headers=headers) as client:
-                        try:
-                            response = await client.post(webhook.url, data=message.content, headers=headers)
-                            success = (response.status_code in SUCCESS_STATUS_CODES)
-                            if success:
-                                if response.json() and webhook.response_channel:
-                                    self.logger.success(f"posted webhook for message sent to '{channel}' sent to '{webhook.url}' ({response.status_code} {response.reason_phrase})")
-
-                                    async with self.publish(webhook.response_channel) as publisher:
-                                        message = servo.Message(json=response.json())
-                                        self.logger.info(f"Publishing response message to channel '{webhook.response_channel}': {message}")
-                                        await publisher(message)
-                            else:
-                                self.logger.error(f"failed posted webhook for message sent to '{channel}' event to '{webhook.url}' ({response.status_code} {response.reason_phrase}): {response.text}")
-
-                        except httpx.RequestError as error:
-                            self.logger.warning(f"Failed publishing webhook: {error}")
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
         self._register_event_handlers()
+        self._register_subscriber_handlers()
+
+    ##
+    # Event Webhooks
 
     def _register_event_handlers(self) -> None:
         for webhook in self.config.webhooks:
@@ -184,9 +171,23 @@ class WebhooksConnector(servo.BaseConnector):
         async def __before_handler(self) -> None:
             headers = {**webhook.headers, **{ "Content-Type": CONTENT_TYPE }}
             async with httpx.AsyncClient(headers=headers) as client:
-                # TODO: WTF is this?
-                response = await client.post(webhook.url, data=dict(foo="bar"))
-                success = (response.status_code == httpx.codes.OK)
+                body = RequestBody(event=str(event))
+                json_body = body.json()
+                headers["X-Servo-Signature"] = _signature_for_webhook_body(webhook, json_body)
+                async with httpx.AsyncClient(headers=headers) as client:
+                    try:
+                        response = await client.post(webhook.url, data=json_body, headers=headers)
+                        success = (response.status_code in SUCCESS_STATUS_CODES)
+                        if success:
+                            self.logger.success(f"posted webhook for '{event}' event to '{webhook.url}' ({response.status_code} {response.reason_phrase})")
+                        else:
+                            self.logger.error(f"failed posted webhook for '{event}' event to '{webhook.url}' ({response.status_code} {response.reason_phrase}): {response.text}")
+
+                        await self._publish_response_if_necessary(response, webhook)
+
+                    except (httpx.RequestError, httpx.HTTPError) as error:
+                        self.logger.error(f"HTTP error \"{error.__class__.__name__}\" encountered while posting to webhook \"{webhook.url}\": {error}")
+                        self.logger.trace(f"Webhook: {devtools.pformat(webhook)}, request body={devtools.pformat(json_body)}")
 
         self.add_event_handler(event.event, event.preposition, __before_handler)
 
@@ -204,26 +205,76 @@ class WebhooksConnector(servo.BaseConnector):
                 )
             body = RequestBody(
                 event=str(event),
-                created_at=datetime.now(),
                 results=outbound_results
             )
 
             json_body = body.json()
-            headers["X-Servo-Signature"] = self._signature_for_webhook_body(webhook, json_body)
+            headers["X-Servo-Signature"] = _signature_for_webhook_body(webhook, json_body)
             async with httpx.AsyncClient(headers=headers) as client:
-                response = await client.post(webhook.url, data=json_body, headers=headers)
-                success = (response.status_code in SUCCESS_STATUS_CODES)
-                if success:
-                    self.logger.success(f"posted webhook for '{event}' event to '{webhook.url}' ({response.status_code} {response.reason_phrase})")
-                else:
-                    self.logger.error(f"failed posted webhook for '{event}' event to '{webhook.url}' ({response.status_code} {response.reason_phrase}): {response.text}")
+                try:
+                    response = await client.post(webhook.url, data=json_body, headers=headers)
+                    success = (response.status_code in SUCCESS_STATUS_CODES)
+                    if success:
+                        self.logger.success(f"posted webhook for '{event}' event to '{webhook.url}' ({response.status_code} {response.reason_phrase})")
+                    else:
+                        self.logger.error(f"failed posted webhook for '{event}' event to '{webhook.url}' ({response.status_code} {response.reason_phrase}): {response.text}")
+
+                    await self._publish_response_if_necessary(response, webhook)
+
+                except (httpx.RequestError, httpx.HTTPError) as error:
+                    self.logger.error(f"HTTP error \"{error.__class__.__name__}\" encountered while posting to webhook \"{webhook.url}\": {error}")
+                    self.logger.trace(f"Webhook: {devtools.pformat(webhook)}, request body={devtools.pformat(json_body)}")
 
         self.add_event_handler(event.event, event.preposition, __after_handler)
 
-    def _signature_for_webhook_body(self, webhook: Webhook, body: str) -> str:
-        secret_bytes = webhook.secret.get_secret_value().encode()
-        return str(hmac.new(secret_bytes, body.encode(), hashlib.sha1).hexdigest())
+    ##
+    # Pub/sub Webhooks
+
+    def _register_subscriber_handlers(self) -> None:
+        for webhook in self.config.webhooks:
+            for channel in webhook.channels:
+                self._add_subscriber_for_webhook_channel(webhook, channel)
+
+    def _add_subscriber_for_webhook_channel(self, webhook: Webhook, channel: str) -> None:
+        @self.subscribe(channel)
+        async def _message_received(message: servo.Message, channel: servo.Channel) -> None:
+            servo.logger.debug(f"Notified of a new Message: {message}, {channel}")
+
+            headers = {**webhook.headers, **{ "Content-Type": CONTENT_TYPE }}
+            headers["X-Servo-Signature"] = _signature_for_webhook_body(webhook, message.text)
+            async with httpx.AsyncClient(headers=headers) as client:
+                try:
+                    response = await client.post(webhook.url, data=message.content, headers=headers)
+                    success = (response.status_code in SUCCESS_STATUS_CODES)
+                    if success:
+                        self.logger.success(f"posted webhook for message sent to '{channel}' sent to '{webhook.url}' ({response.status_code} {response.reason_phrase})")
+                    else:
+                        self.logger.error(f"failed posted webhook for message sent to '{channel}' event to '{webhook.url}' ({response.status_code} {response.reason_phrase}): {response.text}")
+
+                    await self._publish_response_if_necessary(response, webhook)
+
+                except (httpx.RequestError, httpx.HTTPError) as error:
+                    self.logger.error(f"HTTP error \"{error.__class__.__name__}\" encountered while posting to webhook \"{webhook.url}\": {error}")
+                    self.logger.trace(f"Webhook: {devtools.pformat(webhook)}, request body={devtools.pformat(json_body)}")
+
+    async def _publish_response_if_necessary(self, response: httpx.Response, webhook: Webhook) -> None:
+        # Only publish successful response with JSON content for the moment
+        if not response.status_code in SUCCESS_STATUS_CODES:
+            return
+
+        if response.headers.get('Content-Type') == 'application/json' and len(response.content):
+            if response.json() and webhook.response_channel:
+                async with self.publish(webhook.response_channel) as publisher:
+                    message = servo.Message(json=response.json())
+                    self.logger.info(f"Publishing response message to channel '{webhook.response_channel}': {message}")
+                    await publisher(message)
+
+
+def _signature_for_webhook_body(webhook: Webhook, body: str) -> str:
+    secret_bytes = webhook.secret.get_secret_value().encode()
+    return str(hmac.new(secret_bytes, body.encode(), hashlib.sha1).hexdigest())
+
 
 # class CLI(servo.cli.ConnectorCLI):
 #     pass
-#     # add, remove, test
+#     # list, add, remove, test
