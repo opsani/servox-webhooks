@@ -8,7 +8,7 @@ import pytest
 import servo
 from servo import BaseConfiguration, BaseConnector, Metric, Unit, on_event
 from servo.events import EventContext
-from servo_webhooks import CLI, WebhooksConfiguration, WebhooksConnector, Webhook, __version__
+from servo_webhooks import WebhooksConfiguration, WebhooksConnector, Webhook, __version__
 import httpx
 import respx
 
@@ -18,8 +18,8 @@ class WebhookEventConnector(BaseConnector):
     @on_event()
     def metrics(self) -> List[Metric]:
         return [
-            Metric("throughput", Unit.REQUESTS_PER_MINUTE),
-            Metric("error_rate", Unit.PERCENTAGE),
+            Metric("throughput", Unit.requests_per_minute),
+            Metric("error_rate", Unit.percentage),
         ]
 
 @respx.mock
@@ -28,7 +28,7 @@ async def test_webhook() -> None:
     config = WebhooksConfiguration(__root__=[webhook])
     connector = WebhooksConnector(config=config)
 
-    request = respx.post("http://localhost:8080/webhook", status_code=200)
+    request = respx.post("http://localhost:8080/webhook").mock(return_value=httpx.Response(204))
     await connector.dispatch_event("measure")
     assert request.called
 
@@ -38,7 +38,7 @@ async def test_webhooks() -> None:
     config = WebhooksConfiguration(__root__=[webhook])
     connector = WebhooksConnector(config=config)
 
-    request = respx.post("http://localhost:8080/webhook", status_code=200)
+    request = respx.post("http://localhost:8080/webhook").mock(return_value=httpx.Response(204))
     await connector.dispatch_event("measure")
     assert request.called
 
@@ -56,7 +56,7 @@ async def test_after_metrics_webhook() -> None:
     config = WebhooksConfiguration(__root__=[webhook])
     connector = WebhooksConnector(config=config)
 
-    request = respx.post("http://localhost:8080/webhook", status_code=200)
+    request = respx.post("http://localhost:8080/webhook").respond(204)
     provider = WebhookEventConnector(config=BaseConfiguration())
     provider.__connectors__.append(connector)
     results = await provider.dispatch_event("metrics")
@@ -68,7 +68,7 @@ async def test_after_metrics_content_type() -> None:
     # Content-Type: application/vnd.opsani.servo.events.after:metrics+json
     # Content-Type: application/vnd.opsani.servo.webhooks+json
     # Content-Type: application/vnd.opsani.servo-webhooks+json
-# await asyncio.sleep(2) 
+# await asyncio.sleep(2)
 
 # no colon, wrong casing, no such event, mixed collection (number and strings)
 def test_bad_event_inputs() -> None:
@@ -86,13 +86,13 @@ def test_request_schema() -> None:
     pass
 
 @respx.mock
-async def test_hmac_signature() -> None:    
+async def test_hmac_signature() -> None:
     webhook = Webhook(url="http://localhost:8080/webhook", events="after:measure", secret="testing")
     config = WebhooksConfiguration(__root__=[webhook])
     connector = WebhooksConnector(config=config)
 
     info = {}
-    def match_and_mock(request, response):
+    def match_and_mock(request):
         if request.method != "POST":
             return None
 
@@ -101,9 +101,9 @@ async def test_hmac_signature() -> None:
             body = request.read()
             info.update(dict(signature=signature, body=body))
 
-        return response
+        return httpx.Response(204)
 
-    webhook_request = respx.add(match_and_mock, status_code=204)
+    webhook_request = respx.route().mock(side_effect=match_and_mock)
     await connector.dispatch_event("measure")
     assert webhook_request.called
 
@@ -117,13 +117,13 @@ def test_cancelling_event_from_before_request() -> None:
 class TestCLI:
     def test_list(self) -> None:
         pass
-    
+
     def test_schema(self) -> None:
         pass
 
     def test_trigger(self) -> None:
         pass
-    
+
     def test_validate(self) -> None:
         pass
 
@@ -164,4 +164,3 @@ def test_from_str(event_str: str, found: bool, resolved: str):
 #     result = cli_runner.invoke(servo_cli, "show metrics", catch_exceptions=False)
 #     assert result.exit_code == 0
 #     assert re.match("METRIC\\s+UNIT\\s+CONNECTORS", result.stdout)
-
