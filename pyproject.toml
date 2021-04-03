@@ -5,8 +5,8 @@ description = "A flexible webhooks connector for Opsani Servo assemblies"
 authors = ["Blake Watters <blake@opsani.com>"]
 license = "Apache-2.0"
 readme = "README.md"
-homepage = "https://github.com/opsani/servo-webhooks"
-repository = "https://github.com/opsani/servo-webhooks"
+homepage = "https://github.com/opsani/servox-webhooks"
+repository = "https://github.com/opsani/servox-webhooks"
 
 [tool.poetry.dependencies]
 python = "^3.8"
