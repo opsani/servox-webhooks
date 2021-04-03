@@ -51,7 +51,15 @@ class Webhook(servo.BaseConfiguration):
         description="Optional free-form text describing the context or purpose of the webhook.",
     )
     events: List[str] = Field(
+        [],
         description="A list of events that the webhook is listening for.",
+    )
+    channels: List[str] = Field(
+        [],
+        description="A list of channels that the webhook is subscribed to.",
+    )
+    response_channel: Optional[str] = Field(
+        description="The channel to publish webhook responses to.",
     )
     url: AnyHttpUrl = Field(
         description="An HTTP, HTTPS, or HTTP/2 endpoint listening for webhooks event requests.",
@@ -65,14 +73,16 @@ class Webhook(servo.BaseConfiguration):
     )
     backoff: BackoffConfig = BackoffConfig()
 
-    @validator("events", pre=True)
-    def coerce_single_event_to_list(cls, v):
+    @validator("events", "channels", pre=True)
+    def _coerce_single_event_to_list(cls, v):
         if isinstance(v, str):
             return [v]
         return v
 
     # Map strings from config into EventContext objects
     _validate_events = validator("events", pre=True, allow_reuse=True)(validate_event_contexts)
+
+    # TODO: must have events or channels
 
 
 class WebhooksConfiguration(servo.AbstractBaseConfiguration):
@@ -125,6 +135,34 @@ class RequestBody(BaseModel):
 class WebhooksConnector(servo.BaseConnector):
     config: WebhooksConfiguration
 
+    @servo.on_event()
+    async def startup(self) -> None:
+        for webhook in self.config.webhooks:
+            for channel in webhook.channels:
+                @self.subscribe(channel)
+                async def _message_received(message: servo.Message, channel: servo.Channel) -> None:
+                    servo.logger.debug(f"Notified of a new Message: {message}, {channel}")
+
+                    headers = {**webhook.headers, **{ "Content-Type": CONTENT_TYPE }}
+                    headers["X-Servo-Signature"] = self._signature_for_webhook_body(webhook, message.text)
+                    async with httpx.AsyncClient(headers=headers) as client:
+                        try:
+                            response = await client.post(webhook.url, data=message.content, headers=headers)
+                            success = (response.status_code in SUCCESS_STATUS_CODES)
+                            if success:
+                                if response.json() and webhook.response_channel:
+                                    self.logger.success(f"posted webhook for message sent to '{channel}' sent to '{webhook.url}' ({response.status_code} {response.reason_phrase})")
+
+                                    async with self.publish(webhook.response_channel) as publisher:
+                                        message = servo.Message(json=response.json())
+                                        self.logger.info(f"Publishing response message to channel '{webhook.response_channel}': {message}")
+                                        await publisher(message)
+                            else:
+                                self.logger.error(f"failed posted webhook for message sent to '{channel}' event to '{webhook.url}' ({response.status_code} {response.reason_phrase}): {response.text}")
+
+                        except httpx.RequestError as error:
+                            self.logger.warning(f"Failed publishing webhook: {error}")
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._register_event_handlers()
@@ -146,6 +184,7 @@ class WebhooksConnector(servo.BaseConnector):
         async def __before_handler(self) -> None:
             headers = {**webhook.headers, **{ "Content-Type": CONTENT_TYPE }}
             async with httpx.AsyncClient(headers=headers) as client:
+                # TODO: WTF is this?
                 response = await client.post(webhook.url, data=dict(foo="bar"))
                 success = (response.status_code == httpx.codes.OK)
 
