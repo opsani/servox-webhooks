@@ -258,16 +258,19 @@ class WebhooksConnector(servo.BaseConnector):
                     self.logger.trace(f"Webhook: {devtools.pformat(webhook)}, request body={devtools.pformat(json_body)}")
 
     async def _publish_response_if_necessary(self, response: httpx.Response, webhook: Webhook) -> None:
-        # Only publish successful response with JSON content for the moment
+        # Only publish successful responses for the moment
         if not response.status_code in SUCCESS_STATUS_CODES:
             return
 
-        if response.headers.get('Content-Type') == 'application/json' and len(response.content):
-            if response.json() and webhook.response_channel:
-                async with self.publish(webhook.response_channel) as publisher:
-                    message = servo.Message(json=response.json())
-                    self.logger.info(f"Publishing response message to channel '{webhook.response_channel}': {message}")
-                    await publisher(message)
+        content_type = response.headers.get("Content-Type")
+        if content_type is None:
+            return
+
+        if len(response.content) and webhook.response_channel:
+            async with self.publish(webhook.response_channel) as publisher:
+                message = servo.Message(content=response.content, content_type=content_type)
+                self.logger.info(f"Publishing response message to channel '{webhook.response_channel}': {message}")
+                await publisher(message)
 
 
 def _signature_for_webhook_body(webhook: Webhook, body: str) -> str:
