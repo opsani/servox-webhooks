@@ -14,7 +14,7 @@ servox = ">= 0.9.5"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0.1"
-pytest-asyncio = "^0.14.0"
+pytest-asyncio = "^0.15.1"
 respx = "^0.16.3"
 uvicorn = "^0.13.4"
 fastapi = "^0.63.0"
