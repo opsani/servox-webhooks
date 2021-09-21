@@ -10,7 +10,7 @@ repository = "https://github.com/opsani/servox-webhooks"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-servox = ">= 0.9.5"
+servox = ">= 0.10.7"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0.1"

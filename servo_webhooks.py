@@ -168,7 +168,7 @@ class WebhooksConnector(servo.BaseConnector):
                     raise ValueError(f"Unsupported Preposition value given for webhook: '{event.preposition}'")
 
     def _add_before_event_webhook_handler(self, webhook: Webhook, event: EventContext) -> None:
-        async def __before_handler(self) -> None:
+        async def __before_handler(self, **kwargs) -> None:
             headers = {**webhook.headers, **{ "Content-Type": CONTENT_TYPE }}
             async with httpx.AsyncClient(headers=headers) as client:
                 body = RequestBody(event=str(event))
