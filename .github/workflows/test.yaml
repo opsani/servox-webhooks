@@ -6,7 +6,7 @@ jobs:
     name: pytest
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v3
     - uses: actions/setup-python@v2.2.2
       id: setup-python
       with:
