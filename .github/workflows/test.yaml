@@ -13,7 +13,7 @@ jobs:
         python-version: '3.8'
         architecture: x64
     - name: Set up Poetry cache
-      uses: actions/cache@v2.1.5
+      uses: actions/cache@v3.0.4
       id: cached-poetry
       with:
         path: ~/.local
@@ -31,7 +31,7 @@ jobs:
         poetry config virtualenvs.create true
         poetry config virtualenvs.in-project true
     - name: Set up dependencies cache
-      uses: actions/cache@v2.1.5
+      uses: actions/cache@v3.0.4
       id: cached-poetry-dependencies
       with:
         path: .venv
@@ -43,7 +43,7 @@ jobs:
       run: poetry install --no-interaction --no-root
     # NOTE: Install our root project into the venv cache without busting it
     - name: Set up root + dependencies cache
-      uses: actions/cache@v2.1.5
+      uses: actions/cache@v3.0.4
       id: cached-project
       with:
         path: .venv
