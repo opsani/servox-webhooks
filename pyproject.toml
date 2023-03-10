@@ -16,7 +16,7 @@ servox = ">= 0.10.7"
 pytest = "^6.0.1"
 pytest-asyncio = "^0.15.1"
 respx = "^0.16.3"
-uvicorn = "^0.13.4"
+uvicorn = "^0.21.0"
 fastapi = "^0.63.0"
 
 [tool.poetry.plugins."servo.connectors"]
